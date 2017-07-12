@@ -11,13 +11,13 @@ module test;
 	initial begin
 		$dumpfile("top_test.vcd");
 		$dumpvars(0, top0);
-		$dumplimit(1000000);
+		$dumplimit(300000);
 		$monitor($stime, "clk:%b rst: %b", clk, rst_n);
 		rst_n = 0;
 		clk = 0;
 #100
 		rst_n = 1;
-#1000000
+#300000
 	$finish;
 	end
 endmodule

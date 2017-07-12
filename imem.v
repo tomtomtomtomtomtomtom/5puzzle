@@ -1,1627 +1,1328 @@
 module imem(pc, op);
-	input [11:0] pc;
-	output reg [43:0] op;
-
-	parameter [27:0] CHECK1 = 28'b0000_0000_0000_0000_0000_0000_0101,
-	CHECK2 = 28'b0000_0000_0000_0000_0000_0000_0111,
-	CHECK3 = 28'b0000_0000_0000_0000_0000_0000_1011,
-	CHECK4 = 28'b0000_0000_0000_0000_0000_0000_1101,
-	CHECK5 = 28'b0000_0000_0000_0000_0000_0000_1010,
-	CHECK7 = 28'b0000_0000_0000_0000_0000_0000_1110,
-	CHECK0 = 28'b0000_0000_0000_0000_0000_0000_1111,
-	CHECK_NEXT_RIGHT = 28'b0000_0000_0000_0000_0000_0000_0001,
-	CHECK_NEXT_LEFT = 28'b0000_0000_0000_0000_0000_0000_0010,
-	CHECK_NEXT_UP = 28'b0000_0000_0000_0000_0000_0000_0011,
-	CHECK_NEXT_DOWN = 28'b0000_0000_0000_0000_0000_0000_0000;
-	
-	parameter [11:0] TO_FIND_1 = 0,
-	TO_FIND_2 = 28,
-	TO_FIND_3 = 67,
-	TO_FIND_4 = 121,
-	TO_FIND_7 = 164,
-	TO_FIND_0 = 202,
-	TO_FIND_BLANK_TO_MOVE_2_AND_3 = 89,
-	TO_FIND_BLANK_TO_MOVE_4_AND_7 = 186,
-	TO_MOVE_2_AND_3 = 111,
-	TO_MOVE_4_AND_7 = 198,
-	TO_MOVE_COMPLETE = 208,
-	TO_FINISH = 227;
+	input [7:0] pc;
+	output reg [10:0] op;
+parameter LAST=239;
 
 	`include "def.h"
 	always @(pc) begin
 		case (pc)
-			//synopsys parallel_case full_case
-			// find and check if 1 is in the right top corner
-			//first, find 1 and put it into COMPARE_wITH_ANSWER_BITS
 			0: begin
-				op[43:36]  <= FIND;
-				op[35:32]  <= 0;
-				op[31:28]  <= 0;
-				op[27:21]  <= 1;
-				op[20:0]   <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 0;
+				op[1:0]  <= 0;
 			end
 
-			// then, check if it is in the answer position
 			1: begin
-				op[43:36]  <= CHECK;
-				op[35:32]  <= 0;
-				op[31:28]  <= 3;
-				op[27:0]   <= CHECK1;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 4;
 			end
 
-			// if 1 is same as answer position go on to find 2
 			2: begin
-				op[43:36] <= JNZ;
-				op[35:12] <= 0;
-				op[11:0]  <= 22;
+				op[10:8] <= LOAD;
+				op[7:2] <= 0;
+				op[1:0]  <= 0;
 			end
 
-			// if 1 is not the same as answer position, put next move into register NEXT_MOVEMENT
 			3: begin
-				op[43:36] <= COMP1;
-				op[35:0]  <= 0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
-			// check if next movement is right
 			4: begin
-				op[43:36] <= NOT_CHECK;
-				op[35:32] <= 0;
-				op[31:28] <= 4;
-				op[27:0]  <= CHECK_NEXT_RIGHT;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 1;
+				op[1:0]  <= 0;
 			end
 
-			//if next is not right, jump to check if it is left. if it is right, go on.
 			5: begin
-				op[43:36] <= JNZ;
-				op[35:12] <= 0;
-				op[11:0]  <= 9;//NOT CHECK LEFT のとこ
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 8;
 			end
 
-			// swap with right cell
 			6: begin
-				op[43:36] <= RIGHT;
-				op[35:0]  <= 0;
+				op[10:8] <= LOAD;
+				op[7:2] <= 1;
+				op[1:0]  <= 0;
 			end
 
 			7: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
-			//jump beck to find 1 and check
 			8: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_1;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 2;
+				op[1:0]  <= 0;
 			end
 
-			// check if next movement is left
 			9: begin
-				op[43:36] <= NOT_CHECK;
-				op[35:32]  <= 0;
-				op[31:28] <= 4;
-				op[27:0]  <= CHECK_NEXT_LEFT;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 12;
 			end
 
-			//if next is not left, jump to check if it is up. if it is left, go on.
 			10: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]   <= 14;//NOT CHECK UP のとこ
+				op[10:8] <= LOAD;
+				op[7:2] <= 2;
+				op[1:0]  <= 0;
 			end
 
-			// swap with left cell
 			11: begin
-				op[43:36] <= LEFT;
-				op[35:0]  <= 0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
 			12: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 3;
+				op[1:0]  <= 0;
 			end
 
-			//jump beck to find 1 and check
 			13: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_1;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 16;
 			end
 
-			// check if next movement is up
 			14: begin
-				op[43:36] <= NOT_CHECK;
-				op[35:32]  <= 0;
-				op[31:28] <= 4;
-				op[27:0]  <= CHECK_NEXT_UP;
+				op[10:8] <= LOAD;
+				op[7:2] <= 3;
+				op[1:0]  <= 0;
 			end
 
-			//if next is not up, check if next is down. if it is up, go on.
 			15: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]   <= 19;//NOT CHECK DOWN のとこ
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
-			// swap with right cell
 			16: begin
-				op[43:36] <= UP;
-				op[35:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 4;
+				op[1:0]  <= 0;
 			end
 
 			17: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 20;
 			end
 
-			//jump beck to find 1 and check
 			18: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_1;
+				op[10:8] <= LOAD;
+				op[7:2] <= 4;
+				op[1:0]  <= 0;
 			end
 
-			// swap with down cell
 			19: begin
-				op[43:36] <= DOWN;
-				op[35:0]  <= 0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
 			20: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 5;
+				op[1:0]  <= 0;
 			end
 
-			//jump beck to find 1 and check
 			21: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_1;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 24;
 			end
 
-///////////////
-///////////////
-///////////////
-///////////////
-/////////////// 1 is done. go to 2!!!!!!!!!!!!!!!
-///////////////
-///////////////
-///////////////
-///////////////
-////////////////////////////////////////////////////////
-// first see if 1, 2, and 3 are on the right position //
-////////////////////////////////////////////////////////
-			// 1 is already in the right place
 			22: begin
-				op[43:36] <= FIND;
-				op[35:32]  <= 0;
-				op[31:28] <= 0;
-				op[27:21] <= 2;
-				op[20:0]  <= 0;
+				op[10:8] <= LOAD;
+				op[7:2] <= 5;
+				op[1:0]  <= 0;
 			end
 
 			23: begin
-				op[43:36] <= NOT_CHECK;
-				op[35:32]  <= 0;
-				op[31:28]  <= 3;
-				op[27:0]   <= 28'b0000_0000_0000_0000_0000_0000_0110;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
 			24: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_2;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 6;
+				op[1:0]  <= 0;
 			end
 
 			25: begin
-				op[43:36] <= FIND;
-				op[35:32]  <= 0;
-				op[31:28] <= 0;
-				op[27:21] <= 3;
-				op[20:0]  <= 0;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 28;
 			end
 
 			26: begin
-				op[43:36] <= CHECK;
-				op[35:32]  <= 0;
-				op[31:28]  <= 3;
-				op[27:0]   <= 28'b0000_0000_0000_0000_0000_0000_0111;
+				op[10:8] <= LOAD;
+				op[7:2] <= 6;
+				op[1:0]  <= 0;
 			end
 
 			27: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]  <= 115;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
-			// find and check if 2 is in the right position
-			//first, find 2 and put it into COMPARE_wITH_ANSWER_BITS
 			28: begin
-				op[43:36]  <= FIND;
-				op[35:32]  <= 0;
-				op[31:28]  <= 0;
-				op[27:21]  <= 2;
-				op[20:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 7;
+				op[1:0]  <= 0;
 			end
 
-			// then, check if it is in the answer position
 			29: begin
-				op[43:36]  <= CHECK;
-				op[35:32]  <= 0;
-				op[31:28]  <= 3;
-				op[27:0]   <= CHECK2;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 32;
 			end
 
-			// if 2 is same as answer position go on to find 3
 			30: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]   <= 50;
+				op[10:8] <= LOAD;
+				op[7:2] <= 7;
+				op[1:0]  <= 0;
 			end
 
-			// if 2 is not the same as answer position, put next move into register NEXT_MOVEMENT
 			31: begin
-				op[43:36] <= COMP2;
-				op[35:0]  <= 0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
-			// check if next movement is right
 			32: begin
-				op[43:36] <= NOT_CHECK;
-				op[35:32]  <= 0;
-				op[31:28] <= 4;
-				op[27:0]  <= CHECK_NEXT_RIGHT;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 8;
+				op[1:0]  <= 0;
 			end
 
-			//if next is not right, jump to check if it is left. if it is right, go on.
 			33: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]   <= 37;//NOT CHECK LEFT のとこ
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 36;
 			end
 
-			// swap with right cell
 			34: begin
-				op[43:36] <= RIGHT;
-				op[35:0]  <= 0;
+				op[10:8] <= LOAD;
+				op[7:2] <= 8;
+				op[1:0]  <= 0;
 			end
 
 			35: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
-			//jump beck to find 1 and check
 			36: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_2;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 9;
+				op[1:0]  <= 0;
 			end
 
-			// check if next movement is left
 			37: begin
-				op[43:36] <= NOT_CHECK;
-				op[35:32]  <= 0;
-				op[31:28] <= 4;
-				op[27:0]  <= CHECK_NEXT_LEFT;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 40;
 			end
 
-			//if next is not left, jump to check if it is up. if it is left, go on.
 			38: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]   <= 42;//NOT CHECK UP のとこ
+				op[10:8] <= LOAD;
+				op[7:2] <= 9;
+				op[1:0]  <= 0;
 			end
 
-			// swap with left cell
 			39: begin
-				op[43:36] <= LEFT;
-				op[35:0]  <= 0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
 			40: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 10;
+				op[1:0]  <= 0;
 			end
 
-			//jump beck to find 1 and check
 			41: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_2;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 44;
 			end
 
-			// check if next movement is up
 			42: begin
-				op[43:36] <= NOT_CHECK;
-				op[35:32]  <= 0;
-				op[31:28] <= 4;
-				op[27:0]  <= CHECK_NEXT_UP;
+				op[10:8] <= LOAD;
+				op[7:2] <= 10;
+				op[1:0]  <= 0;
 			end
 
-			//if next is not up, check if next is down. if it is up, go on.
 			43: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]   <= 47;//NOT CHECK DOWN のとこ
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
-			// swap with right cell
 			44: begin
-				op[43:36] <= UP;
-				op[35:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 11;
+				op[1:0]  <= 0;
 			end
 
 			45: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 48;
 			end
 
-			//jump beck to find 1 and check
 			46: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_2;
+				op[10:8] <= LOAD;
+				op[7:2] <= 11;
+				op[1:0]  <= 0;
 			end
 
-			// swap with down cell
 			47: begin
-				op[43:36] <= DOWN;
-				op[35:0]  <= 0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
 			48: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 12;
+				op[1:0]  <= 0;
 			end
 
-			//jump beck to find 1 and check
 			49: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_2;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 52;
 			end
 
-///////////////
-///////////////
-///////////////
-///////////////
-/////////////// 2 is done. go to 3!!!!!!!!!!!!!!!
-///////////////
-///////////////
-///////////////
-///////////////
-
-
-			// first check out if 3 is in the worst position
-///////////////////////////
-// worst position check  //
-///////////////////////////
 			50: begin
-				op[43:36] <= FIND;
-				op[35:32]  <= 0;
-				op[31:28] <= 0;
-				op[27:21] <= 3;
-				op[20:0]  <= 0;
+				op[10:8] <= LOAD;
+				op[7:2] <= 12;
+				op[1:0]  <= 0;
 			end
 
 			51: begin
-				op[43:36] <= CHECK;
-				op[35:32]  <= 0;
-				op[31:28] <= 3;
-				op[27:0]  <= 28'b0000_0000_0000_0000_0000_0000_0110;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
 			52: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]  <= 62;//to left down 
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 13;
+				op[1:0]  <= 0;
 			end
 
 			53: begin
-				op[43:36] <= NOT_CHECK;
-				op[35:32]  <= 0;
-				op[31:28] <= 3;
-				op[27:0]  <= 28'b0000_0000_0000_0000_0000_0000_1010;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 56;
 			end
 
 			54: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_3;// to move 3
+				op[10:8] <= LOAD;
+				op[7:2] <= 13;
+				op[1:0]  <= 0;
 			end
 
 			55: begin
-				op[43:36] <= FIND;
-				op[35:32]  <= 0;
-				op[31:28] <= 0;
-				op[27:21]  <= 0;
-				op[20:0]  <= 0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
-
+			
 			56: begin
-				op[43:36] <= NOT_CHECK;
-				op[35:32]  <= 0;
-				op[31:28] <= 3;
-				op[27:0]  <= 28'b0000_0000_0000_0000_0000_0000_0110;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 14;
+				op[1:0]  <= 0;
 			end
 
 			57: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_3;// to move 3
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 60;
 			end
 
-			// swap with down cell
 			58: begin
-				op[43:36] <= RIGHT;
-				op[35:0]  <= 0;
+				op[10:8] <= LOAD;
+				op[7:2] <= 14;
+				op[1:0]  <= 0;
 			end
 
 			59: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
 			60: begin
-				op[43:36] <= DOWN;
-				op[35:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 15;
+				op[1:0]  <= 0;
 			end
 
 			61: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 64;
 			end
 
 			62: begin
-				op[43:36] <= LEFT;
-				op[35:0]  <= 0;
+				op[10:8] <= LOAD;
+				op[7:2] <= 15;
+				op[1:0]  <= 0;
 			end
 
 			63: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
 			64: begin
-				op[43:36] <= DOWN;
-				op[35:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 16;
+				op[1:0]  <= 0;
 			end
 
 			65: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 68;
 			end
 
 			66: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_2;
+				op[10:8] <= LOAD;
+				op[7:2] <= 16;
+				op[1:0]  <= 0;
 			end
-//////////////////////////////
-// move 3 to right position //
-//////////////////////////////
-
-			// find and check 3 is in the right position
-			// first, find 3 and put it into COMPARE_wITH_ANSWER_BITS
+			
 			67: begin
-				op[43:36]  <= FIND;
-				op[35:32]  <= 0;
-				op[31:28]  <= 0;
-				op[27:21]   <= 3;
-				op[20:0]  <= 0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
-			// then, check if it is in the answer position
 			68: begin
-				op[43:36]  <= CHECK;
-				op[35:32]  <= 0;
-				op[31:28]  <= 3;
-				op[27:0]   <= CHECK3;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 17;
+				op[1:0]  <= 0;
 			end
 
-			// if 3 is same as answer position go on to move 2 and 3 to right position
 			69: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]   <= TO_FIND_BLANK_TO_MOVE_2_AND_3;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 72;
 			end
 
-			// if 2 is not the same as answer position, put next move into register NEXT_MOVEMENT
 			70: begin
-				op[43:36] <= COMP3;
-				op[35:0]  <= 0;
+				op[10:8] <= LOAD;
+				op[7:2] <= 17;
+				op[1:0]  <= 0;
 			end
 
-			// check if next movement is right
 			71: begin
-				op[43:36] <= NOT_CHECK;
-				op[35:32]  <= 0;
-				op[31:28] <= 4;
-				op[27:0]  <= CHECK_NEXT_RIGHT;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
-			//if next is not right, jump to check if it is left. if it is right, go on.
 			72: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]   <= 76;//NOT CHECK LEFT のとこ
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 18;
+				op[1:0]  <= 0;
 			end
 
-			// swap with right cell
 			73: begin
-				op[43:36] <= RIGHT;
-				op[35:0]  <= 0;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 76;
 			end
 
 			74: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8] <= LOAD;
+				op[7:2] <= 18;
+				op[1:0]  <= 0;
 			end
 
-			//jump beck to find 1 and check
 			75: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_3;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
-			// check if next movement is left
 			76: begin
-				op[43:36] <= NOT_CHECK;
-				op[35:32]  <= 0;
-				op[31:28] <= 4;
-				op[27:0]  <= CHECK_NEXT_LEFT;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 19;
+				op[1:0]  <= 0;
 			end
 
-			//if next is not left, jump to check if it is up. if it is left, go on.
 			77: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]   <= 81;//NOT CHECK UP のとこ
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 80;
 			end
 
-			// swap with left cell
 			78: begin
-				op[43:36] <= LEFT;
-				op[35:0]  <= 0;
+				op[10:8] <= LOAD;
+				op[7:2] <= 19;
+				op[1:0]  <= 0;
 			end
 
 			79: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
-			//jump beck to find 1 and check
 			80: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_3;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 20;
+				op[1:0]  <= 0;
 			end
 
-			// check if next movement is up
 			81: begin
-				op[43:36] <= NOT_CHECK;
-				op[35:32]  <= 0;
-				op[31:28] <= 4;
-				op[27:0]  <= CHECK_NEXT_UP;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 84;
 			end
 
-			//if next is not up, check if next is down. if it is up, go on.
 			82: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]   <= 86;//NOT CHECK DOWN のとこ
+				op[10:8] <= LOAD;
+				op[7:2] <= 20;
+				op[1:0]  <= 0;
 			end
 
-			// swap with right cell
 			83: begin
-				op[43:36] <= UP;
-				op[35:0]  <= 0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
 			84: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 21;
+				op[1:0]  <= 0;
 			end
 
-			//jump beck to find 1 and check
 			85: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_3;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 88;
 			end
 
-			// swap with down cell
 			86: begin
-				op[43:36] <= DOWN;
-				op[35:0]  <= 0;
+				op[10:8] <= LOAD;
+				op[7:2] <= 21;
+				op[1:0]  <= 0;
 			end
 
 			87: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
-			//jump beck to find 1 and check
 			88: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_3;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 22;
+				op[1:0]  <= 0;
 			end
-////////////////////////////////////
-// move 2 and 3 to right position //
-////////////////////////////////////
-///////// first move blank /////////
-////////////////////////////////////
-			// first find blank
+			
 			89: begin
-				op[43:36]  <= FIND;
-				op[35:32]  <= 0;
-				op[31:28]  <= 0;
-				op[27:21]   <= 0;
-				op[20:0]  <= 0;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 92;
 			end
 
-			// then, check if it is in the answer position
 			90: begin
-				op[43:36]  <= CHECK;
-				op[35:32]  <= 0;
-				op[31:28]  <= 3;
-				op[27:0]   <= 28'b0000_0000_0000_0000_0000_0000_0110;
+				op[10:8] <= LOAD;
+				op[7:2] <= 22;
+				op[1:0]  <= 0;
 			end
 
-			// if 3 is same as answer position go on to move 2 and 3 to right position
 			91: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]   <= TO_MOVE_2_AND_3;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
-			// if 2 is not the same as answer position, put next move into register NEXT_MOVEMENT
 			92: begin
-				op[43:36] <= COMP0_FOR_2_AND_3;
-				op[35:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 23;
+				op[1:0]  <= 0;
 			end
 
-			// check if next movement is right
 			93: begin
-				op[43:36] <= NOT_CHECK;
-				op[35:32]  <= 0;
-				op[31:28] <= 4;
-				op[27:0]  <= CHECK_NEXT_RIGHT;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 96;
 			end
 
-			//if next is not right, jump to check if it is left. if it is right, go on.
 			94: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]   <= 98;//NOT CHECK LEFT のとこ
+				op[10:8] <= LOAD;
+				op[7:2] <= 23;
+				op[1:0]  <= 0;
 			end
 
-			// swap with right cell
 			95: begin
-				op[43:36] <= RIGHT;
-				op[35:0]  <= 0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
 			96: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 24;
+				op[1:0]  <= 0;
 			end
 
-			//jump beck to find 1 and check
 			97: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_BLANK_TO_MOVE_2_AND_3;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 100;
 			end
 
-			// check if next movement is left
 			98: begin
-				op[43:36] <= NOT_CHECK;
-				op[35:32]  <= 0;
-				op[31:28] <= 4;
-				op[27:0]  <= CHECK_NEXT_LEFT;
+				op[10:8] <= LOAD;
+				op[7:2] <= 24;
+				op[1:0]  <= 0;
 			end
 
-			//if next is not left, jump to check if it is up. if it is left, go on.
 			99: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]   <= 103;//NOT CHECK UP のとこ
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
-			// swap with left cell
 			100: begin
-				op[43:36] <= LEFT;
-				op[35:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 25;
+				op[1:0]  <= 0;
 			end
 
 			101: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 104;
 			end
-
-			//jump beck to find 1 and check
+			
 			102: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_BLANK_TO_MOVE_2_AND_3;
+				op[10:8] <= LOAD;
+				op[7:2] <= 25;
+				op[1:0]  <= 0;
 			end
 
-			// check if next movement is up
 			103: begin
-				op[43:36] <= NOT_CHECK;
-				op[35:32]  <= 0;
-				op[31:28] <= 4;
-				op[27:0]  <= CHECK_NEXT_UP;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
-			//if next is not up, check if next is down. if it is up, go on.
 			104: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]   <= 108;//NOT CHECK DOWN のとこ
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 26;
+				op[1:0]  <= 0;
 			end
 
-			// swap with right cell
 			105: begin
-				op[43:36] <= UP;
-				op[35:0]  <= 0;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 108;
 			end
 
 			106: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8] <= LOAD;
+				op[7:2] <= 26;
+				op[1:0]  <= 0;
 			end
 
-			//jump beck to find 1 and check
 			107: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_BLANK_TO_MOVE_2_AND_3;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
-			// swap with down cell
 			108: begin
-				op[43:36] <= DOWN;
-				op[35:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 27;
+				op[1:0]  <= 0;
 			end
 
 			109: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 112;
 			end
 
-			//jump beck to find 1 and check
 			110: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_BLANK_TO_MOVE_2_AND_3;
+				op[10:8] <= LOAD;
+				op[7:2] <= 27;
+				op[1:0]  <= 0;
 			end
-/////////////////////////////////////
-// move 2 and 3 from position 0110 //
-/////////////////////////////////////
+			
 			111: begin
-				op[43:36] <= RIGHT;
-				op[35:0]  <= 0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
 			112: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 28;
+				op[1:0]  <= 0;
 			end
 
 			113: begin
-				op[43:36] <= DOWN;
-				op[35:0]  <= 0;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 116;
 			end
 
 			114: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8] <= LOAD;
+				op[7:2] <= 28;
+				op[1:0]  <= 0;
 			end
-////////////////////////
-////////////////////////Done moving 1,2, and 3 to the right position!!!
-////////////////////////Go on!!!!!!!!!!
-////////////////////////
-///////////////////////////////////////////////
-// check if 4 and 7 are in the true position //
-///////////////////////////////////////////////
-			// check if 4 is in the true position
+			
 			115: begin
-				op[43:36] <= FIND;
-				op[35:32]  <= 0;
-				op[31:28] <= 0;
-				op[27:21] <= 4;
-				op[20:0]  <= 0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
 			116: begin
-				op[43:36] <= NOT_CHECK;
-				op[35:32]  <= 0;
-				op[31:28] <= 3;
-				op[27:0]  <= 28'b0000_0000_0000_0000_0000_0000_1001;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 29;
+				op[1:0]  <= 0;
 			end
 
 			117: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_4;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 120;
 			end
 
 			118: begin
-				op[43:36] <= FIND;
-				op[35:32]  <= 0;
-				op[31:28] <= 0;
-				op[27:21] <= 7;
-				op[20:0]  <= 0;
+				op[10:8] <= LOAD;
+				op[7:2] <= 29;
+				op[1:0]  <= 0;
 			end
 
 			119: begin
-				op[43:36] <= CHECK;
-				op[35:32]  <= 0;
-				op[31:28]  <= 3;
-				op[27:0]   <= 28'b0000_0000_0000_0000_0000_0000_1101;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
 			120: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 30;
+				op[1:0]  <= 0;
 			end
-/////////////////////////////////////////////////////////////
-// check if 4 is in the right place and move it if it isnt //
-/////////////////////////////////////////////////////////////
-			// find 4
+			
 			121: begin
-				op[43:36] <= FIND;
-				op[35:32]  <= 0;
-				op[31:28] <= 0;
-				op[27:21] <= 4;
-				op[20:0]  <= 0;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 124;
 			end
 
-			// check if 4 is in the right place.
 			122: begin
-				op[43:36]  <= CHECK;
-				op[35:32]  <= 0;
-				op[31:28]  <= 3;
-				op[27:0]   <= CHECK4;
+				op[10:8] <= LOAD;
+				op[7:2] <= 30;
+				op[1:0]  <= 0;
 			end
 
-			// if 4 is same as answer position go on to find 7
 			123: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]   <= 143;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
-			// if 2 is not the same as answer position, put next move into register NEXT_MOVEMENT
 			124: begin
-				op[43:36] <= COMP4;
-				op[35:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 31;
+				op[1:0]  <= 0;
 			end
 
-			// check if next movement is right
 			125: begin
-				op[43:36] <= NOT_CHECK;
-				op[35:32]  <= 0;
-				op[31:28] <= 4;
-				op[27:0]  <= CHECK_NEXT_RIGHT;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 128;
 			end
 
-			//if next is not right, jump to check if it is left. if it is right, go on.
 			126: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]   <= 130;//NOT CHECK LEFT のとこ
+				op[10:8] <= LOAD;
+				op[7:2] <= 31;
+				op[1:0]  <= 0;
 			end
 
-			// swap with right cell
 			127: begin
-				op[43:36] <= RIGHT;
-				op[35:0]  <= 0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
 			128: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 32;
+				op[1:0]  <= 0;
 			end
 
-			//jump beck to find 1 and check
 			129: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_4;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 132;
 			end
 
-			// check if next movement is left
 			130: begin
-				op[43:36] <= NOT_CHECK;
-				op[35:32]  <= 0;
-				op[31:28] <= 4;
-				op[27:0]  <= CHECK_NEXT_LEFT;
+				op[10:8] <= LOAD;
+				op[7:2] <= 32;
+				op[1:0]  <= 0;
 			end
 
-			//if next is not left, jump to check if it is up. if it is left, go on.
 			131: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]   <= 135;//NOT CHECK UP のとこ
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
-			// swap with left cell
 			132: begin
-				op[43:36] <= LEFT;
-				op[35:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 33;
+				op[1:0]  <= 0;
 			end
 
 			133: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 136;
 			end
 
-			//jump beck to find 1 and check
 			134: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_4;
+				op[10:8] <= LOAD;
+				op[7:2] <= 33;
+				op[1:0]  <= 0;
 			end
 
-			// check if next movement is up
 			135: begin
-				op[43:36] <= NOT_CHECK;
-				op[35:32]  <= 0;
-				op[31:28] <= 4;
-				op[27:0]  <= CHECK_NEXT_UP;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
-			//if next is not up, check if next is down. if it is up, go on.
 			136: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]   <= 140;//NOT CHECK DOWN のとこ
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 34;
+				op[1:0]  <= 0;
 			end
 
-			// swap with right cell
 			137: begin
-				op[43:36] <= UP;
-				op[35:0]  <= 0;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 140;
 			end
 
 			138: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8] <= LOAD;
+				op[7:2] <= 34;
+				op[1:0]  <= 0;
 			end
 
-			//jump beck to find 1 and check
 			139: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_4;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
-			// swap with down cell
 			140: begin
-				op[43:36] <= DOWN;
-				op[35:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 35;
+				op[1:0]  <= 0;
 			end
 
 			141: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 144;
 			end
 
-			//jump beck to find 1 and check
 			142: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_4;
+				op[10:8] <= LOAD;
+				op[7:2] <= 35;
+				op[1:0]  <= 0;
 			end
-/////////////////
-/////////////////done moving 4, move 7!!!!!!
-/////////////////
-//////////////////////////
-// worst position check //
-//////////////////////////
+			
 			143: begin
-				op[43:36] <= FIND;
-				op[35:32]  <= 0;
-				op[31:28] <= 0;
-				op[27:21] <= 7;
-				op[20:0]  <= 0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
 			144: begin
-				op[43:36] <= CHECK;
-				op[35:32]  <= 0;
-				op[31:28] <= 3;
-				op[27:0]  <= 28'b0000_0000_0000_0000_0000_0000_1001;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 36;
+				op[1:0]  <= 0;
 			end
 
 			145: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]  <= 155;//to down right up right
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 148;
 			end
 
 			146: begin
-				op[43:36] <= NOT_CHECK;
-				op[35:32]  <= 0;
-				op[31:28] <= 3;
-				op[27:0]  <= 28'b0000_0000_0000_0000_0000_0000_1010;
+				op[10:8] <= LOAD;
+				op[7:2] <= 36;
+				op[1:0]  <= 0;
 			end
 
 			147: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_7;// to move 3
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
 			148: begin
-				op[43:36] <= FIND;
-				op[35:32]  <= 0;
-				op[31:28] <= 0;
-				op[27:21]  <= 0;
-				op[20:0]  <= 0;
-			end
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 37;
+				op[1:0]  <= 0;
+      end
 
 			149: begin
-				op[43:36] <= NOT_CHECK;
-				op[35:32]  <= 0;
-				op[31:28] <= 3;
-				op[27:0]  <= 28'b0000_0000_0000_0000_0000_0000_1001;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 152;
 			end
 
 			150: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_7;// to move 3
+				op[10:8] <= LOAD;
+				op[7:2] <= 37;
+				op[1:0]  <= 0;
 			end
 
-			// swap with down cell
 			151: begin
-				op[43:36] <= UP;
-				op[35:0]  <= 0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
 			152: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 38;
+				op[1:0]  <= 0;
 			end
 
 			153: begin
-				op[43:36] <= LEFT;
-				op[35:0]  <= 0;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 156;
 			end
 
 			154: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8] <= LOAD;
+				op[7:2] <= 38;
+				op[1:0]  <= 0;
 			end
 
 			155: begin
-				op[43:36] <= DOWN;
-				op[35:0]  <= 0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
 			156: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 39;
+				op[1:0]  <= 0;
 			end
 
 			157: begin
-				op[43:36] <= RIGHT;
-				op[35:0]  <= 0;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 160;
 			end
 
 			158: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8] <= LOAD;
+				op[7:2] <= 39;
+				op[1:0]  <= 0;
 			end
 
 			159: begin
-				op[43:36] <= UP;
-				op[35:0]  <= 0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
-
 			160: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 40;
+				op[1:0]  <= 0;
 			end
 
 			161: begin
-				op[43:36] <= RIGHT;
-				op[35:0]  <= 0;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 164;
 			end
 
 			162: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8] <= LOAD;
+				op[7:2] <= 40;
+				op[1:0]  <= 0;
 			end
 
 			163: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_4;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
-			// find 7
 			164: begin
-				op[43:36] <= FIND;
-				op[35:32]  <= 0;
-				op[31:28] <= 0;
-				op[27:21] <= 7;
-				op[20:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 41;
+				op[1:0]  <= 0;
 			end
 
-			// check if 4 is in the right place.
 			165: begin
-				op[43:36]  <= CHECK;
-				op[35:32]  <= 0;
-				op[31:28]  <= 3;
-				op[27:0]   <= CHECK7;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 168;
 			end
 
-			// if 4 is same as answer position go on to find 7
 			166: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]   <= TO_FIND_BLANK_TO_MOVE_4_AND_7;
+				op[10:8] <= LOAD;
+				op[7:2] <= 41;
+				op[1:0]  <= 0;
 			end
 
-			// if 2 is not the same as answer position, put next move into register NEXT_MOVEMENT
 			167: begin
-				op[43:36] <= COMP7;
-				op[35:0]  <= 0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
-			// check if next movement is right
 			168: begin
-				op[43:36] <= NOT_CHECK;
-				op[35:32]  <= 0;
-				op[31:28] <= 4;
-				op[27:0]  <= CHECK_NEXT_RIGHT;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 42;
+				op[1:0]  <= 0;
 			end
 
-			//if next is not right, jump to check if it is left. if it is right, go on.
 			169: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]   <= 151;//NOT CHECK LEFT のとこ
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 172;
 			end
 
-			// swap with right cell
 			170: begin
-				op[43:36] <= RIGHT;
-				op[35:0]  <= 0;
+				op[10:8] <= LOAD;
+				op[7:2] <= 42;
+				op[1:0]  <= 0;
 			end
 
 			171: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
-			//jump beck to find 1 and check
 			172: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_7;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 43;
+				op[1:0]  <= 0;
 			end
 
-			// check if next movement is left
 			173: begin
-				op[43:36] <= NOT_CHECK;
-				op[35:32]  <= 0;
-				op[31:28] <= 4;
-				op[27:0]  <= CHECK_NEXT_LEFT;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 176;
 			end
 
-			//if next is not left, jump to check if it is up. if it is left, go on.
 			174: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]   <= 156;//NOT CHECK UP のとこ
+				op[10:8] <= LOAD;
+				op[7:2] <= 43;
+				op[1:0]  <= 0;
 			end
 
-			// swap with left cell
 			175: begin
-				op[43:36] <= LEFT;
-				op[35:0]  <= 0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
 			176: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 44;
+				op[1:0]  <= 0;
 			end
 
-			//jump beck to find 1 and check
 			177: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_7;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 180;
 			end
 
-			// check if next movement is up
 			178: begin
-				op[43:36] <= NOT_CHECK;
-				op[35:32]  <= 0;
-				op[31:28] <= 4;
-				op[27:0]  <= CHECK_NEXT_UP;
+				op[10:8] <= LOAD;
+				op[7:2] <= 44;
+				op[1:0]  <= 0;
 			end
 
-			//if next is not up, check if next is down. if it is up, go on.
 			179: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]   <= 161;//NOT CHECK DOWN のとこ
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
-			// swap with right cell
 			180: begin
-				op[43:36] <= UP;
-				op[35:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 45;
+				op[1:0]  <= 0;
 			end
 
 			181: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 184;
 			end
 
-			//jump beck to find 1 and check
 			182: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_7;
+				op[10:8] <= LOAD;
+				op[7:2] <= 45;
+				op[1:0]  <= 0;
 			end
 
-			// swap with down cell
 			183: begin
-				op[43:36] <= DOWN;
-				op[35:0]  <= 0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
 			184: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 45;
+				op[1:0]  <= 0;
 			end
 
-			//jump beck to find 1 and check
 			185: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_7;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 188;
 			end
-////////////////////////////////////
-// move 4 and 7 to right position //
-////////////////////////////////////
-///////// first move blank /////////
-////////////////////////////////////
-			// first find blank
+			
 			186: begin
-				op[43:36]  <= FIND;
-				op[35:32]  <= 0;
-				op[31:28]  <= 0;
-				op[27:21]   <= 0;
-				op[20:0]  <= 0;
+				op[10:8] <= LOAD;
+				op[7:2] <= 46;
+				op[1:0]  <= 0;
 			end
 
-			// then, check if it is in the answer position
 			187: begin
-				op[43:36]  <= CHECK;
-				op[35:32]  <= 0;
-				op[31:28]  <= 3;
-				op[27:0]   <= 28'b0000_0000_0000_0000_0000_0000_1001;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
-			// if 3 is same as answer position go on to move 2 and 3 to right position
 			188: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]   <= TO_MOVE_4_AND_7;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 47;
+				op[1:0]  <= 0;
 			end
 
-			// if 2 is not the same as answer position, put next move into register NEXT_MOVEMENT
 			189: begin
-				op[43:36] <= COMP0_FOR_4_AND_7;
-				op[35:0]  <= 0;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 192;
 			end
 
-			// check if next movement is left
 			190: begin
-				op[43:36] <= NOT_CHECK;
-				op[35:32]  <= 0;
-				op[31:28] <= 4;
-				op[27:0]  <= CHECK_NEXT_LEFT;
+				op[10:8] <= LOAD;
+				op[7:2] <= 47;
+				op[1:0]  <= 0;
 			end
 
-			//if next is not left, jump to check if it is up. if it is left, go on.
 			191: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]   <= 195;//NOT CHECK UP のとこ
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
-			// swap with left cell
 			192: begin
-				op[43:36] <= LEFT;
-				op[35:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 48;
+				op[1:0]  <= 0;
 			end
 
 			193: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 196;
 			end
 
-			//jump beck to find 1 and check
 			194: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_BLANK_TO_MOVE_4_AND_7;
+				op[10:8] <= LOAD;
+				op[7:2] <= 48;
+				op[1:0]  <= 0;
 			end
 
-			// swap with right cell
 			195: begin
-				op[43:36] <= UP;
-				op[35:0]  <= 0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
 			196: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 49;
+				op[1:0]  <= 0;
 			end
 
-			//jump beck to find 1 and check
 			197: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_BLANK_TO_MOVE_4_AND_7;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 200;
 			end
-/////////////////////////////////////
-// move 2 and 3 from position 0110 //
-/////////////////////////////////////
+			
 			198: begin
-				op[43:36] <= DOWN;
-				op[35:0]  <= 0;
+				op[10:8] <= LOAD;
+				op[7:2] <= 49;
+				op[1:0]  <= 0;
 			end
 
 			199: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
 			200: begin
-				op[43:36] <= RIGHT;
-				op[35:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 50;
+				op[1:0]  <= 0;
 			end
 
 			201: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 204;
 			end
-/////////////////////////////////////////////////////
-// done moving 1,2,3,4,7 move on to last procedure //
-/////////////////////////////////////////////////////
-			// find blank
+			
 			202: begin
-				op[43:36] <= FIND;
-				op[35:32]  <= 0;
-				op[31:28] <= 0;
-				op[27:21] <= 0;
-				op[20:0]  <= 0;
+				op[10:8] <= LOAD;
+				op[7:2] <= 50;
+				op[1:0]  <= 0;
 			end
 
-			// check if 4 is in the right place.
 			203: begin
-				op[43:36]  <= NOT_CHECK;
-				op[35:32]  <= 0;
-				op[31:28]  <= 3;
-				op[27:0]   <= CHECK0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
-			// if 4 is same as answer position go on to find 7
 			204: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]   <= TO_MOVE_COMPLETE;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 51;
+				op[1:0]  <= 0;
 			end
 
 			205: begin
-				op[43:36] <= FIND;
-				op[35:32]  <= 0;
-				op[31:28] <= 0;
-				op[27:21] <= 5;
-				op[20:0]  <= 0;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 208;
 			end
 
-			// check if 4 is in the right place.
 			206: begin
-				op[43:36]  <= CHECK;
-				op[35:32]  <= 0;
-				op[31:28]  <= 3;
-				op[27:0]   <= CHECK5;
+				op[10:8] <= LOAD;
+				op[7:2] <= 51;
+				op[1:0]  <= 0;
 			end
 
-			// if 4 is same as answer position go on to find 7
 			207: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FINISH;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
-			// if 2 is not the same as answer position, put next move into register NEXT_MOVEMENT
 			208: begin
-				op[43:36] <= MOVE_COMPLETE;
-				op[35:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 52;
+				op[1:0]  <= 0;
 			end
 
-			// check if next movement is right
 			209: begin
-				op[43:36] <= NOT_CHECK;
-				op[35:32]  <= 0;
-				op[31:28] <= 4;
-				op[27:0]  <= CHECK_NEXT_RIGHT;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 212;
 			end
 
-			//if next is not right, jump to check if it is left. if it is right, go on.
 			210: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]   <= 214;//NOT CHECK LEFT のとこ
+				op[10:8] <= LOAD;
+				op[7:2] <= 52;
+				op[1:0]  <= 0;
 			end
 
-			// swap with right cell
 			211: begin
-				op[43:36] <= RIGHT;
-				op[35:0]  <= 0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
 			212: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 53;
+				op[1:0]  <= 0;
 			end
 
-			//jump beck to find 1 and check
 			213: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_0;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 216;
 			end
 
-			// check if next movement is left
 			214: begin
-				op[43:36] <= NOT_CHECK;
-				op[35:32]  <= 0;
-				op[31:28] <= 4;
-				op[27:0]  <= CHECK_NEXT_LEFT;
+				op[10:8] <= LOAD;
+				op[7:2] <= 53;
+				op[1:0]  <= 0;
 			end
 
-			//if next is not left, jump to check if it is up. if it is left, go on.
 			215: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]   <= 219;//NOT CHECK UP のとこ
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
-			// swap with left cell
 			216: begin
-				op[43:36] <= LEFT;
-				op[35:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 54;
+				op[1:0]  <= 0;
 			end
 
 			217: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 220;
 			end
 
-			//jump beck to find 1 and check
 			218: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_0;
+				op[10:8] <= LOAD;
+				op[7:2] <= 54;
+				op[1:0]  <= 0;
 			end
 
-			// check if next movement is up
 			219: begin
-				op[43:36] <= NOT_CHECK;
-				op[35:32]  <= 0;
-				op[31:28] <= 4;
-				op[27:0]  <= CHECK_NEXT_UP;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
-			//if next is not up, check if next is down. if it is up, go on.
 			220: begin
-				op[43:36] <= JNZ;
-				op[35:12]  <= 0;
-				op[11:0]   <= 224;//NOT CHECK DOWN のとこ
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 55;
+				op[1:0]  <= 0;
 			end
 
-			// swap with right cell
 			221: begin
-				op[43:36] <= UP;
-				op[35:0]  <= 0;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 224;
 			end
 
 			222: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8] <= LOAD;
+				op[7:2] <= 55;
+				op[1:0]  <= 0;
 			end
 
-			//jump beck to find 1 and check
 			223: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_0;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 
-			// swap with down cell
 			224: begin
-				op[43:36] <= DOWN;
-				op[35:0]  <= 0;
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 56;
+				op[1:0]  <= 0;
 			end
 
 			225: begin
-				op[43:36] <= INC;
-				op[35:32] <= 2;
-				op[31:0]  <= 0;
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 228;
 			end
 
-			//jump beck to find 1 and check
 			226: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= TO_FIND_0;
+				op[10:8] <= LOAD;
+				op[7:2] <= 56;
+				op[1:0]  <= 0;
 			end
 
 			227: begin
-				op[43:36] <= JMP;
-				op[35:12]  <= 0;
-				op[11:0]  <= 227;
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
+			end
+			
+			228: begin
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 57;
+				op[1:0]  <= 0;
+			end
+			
+			229: begin
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 229;
+			end
+			
+			230: begin
+				op[10:8] <= LOAD;
+				op[7:2] <= 57;
+				op[1:0]  <= 0;
+			end
+			
+			231: begin
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
+			end
+			
+			232: begin
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 58;
+				op[1:0]  <= 0;
+			end
+			
+			233: begin
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 236;
+			end
+			
+			234: begin
+				op[10:8] <= LOAD;
+				op[7:2] <= 58;
+				op[1:0]  <= 0;
+			end
+			
+			235: begin
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
+			end
+			
+			236: begin
+				op[10:8]  <= CHECK;
+				op[7:2]  <= 59;
+				op[1:0]  <= 0;
+			end
+			
+			237: begin
+				op[10:8]  <= JNZ;
+				op[7:0]  <= 240;
+			end
+			
+			238: begin
+				op[10:8] <= LOAD;
+				op[7:2] <= 59;
+				op[1:0]  <= 0;
+			end
+			
+			239: begin
+				op[10:8] <= JMP;
+				op[7:0]  <= LAST;
 			end
 		endcase
 	end
